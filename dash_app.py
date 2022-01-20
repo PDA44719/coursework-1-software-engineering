@@ -6,6 +6,7 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import numpy as np
 import plotly.express as px
+from dash.dependencies import Output, Input
 
 # Select the style sheet and define the app
 external_stylesheets = [dbc.themes.LUX]
@@ -79,19 +80,49 @@ card1 = dbc.Card(
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dbc.Button("Go somewhere", color="primary"),
+                    dbc.Button("See Graph", color="primary", href='graph-page'),
                 ])
             ]
         ),
     ],
 )
-app.layout = html.Div([
+
+
+main_page_layout = html.Div([
     html.H1(children='Dashboard'),
+    html.Div(id='main_page_content'),
     dbc.Row([
         dbc.Col([card1], width=3), dbc.Col([card1], width=3), dbc.Col([card1], width=3), dbc.Col([card1], width=3),
         dbc.Col([card1], width=3), dbc.Col([card1], width=3)
     ]),
+])
 
+
+graph_page_layout = html.Div([
+    html.H1(children='Specific Graph'),
+    html.Div(id='graph_page_content'),
+    dbc.Row([
+        dbc.Col([dcc.Graph(figure=fig1)], width={"size": 6, "offset": 3})
+    ]),
+    dbc.Row([
+        dbc.Col([dbc.Button("Go back to main page", color='primary', href='main-page')], width={"size": 4, "offset": 8})
+    ])
+])
+
+
+# Go through the different pages
+@app.callback(Output('page-content', 'children'),
+              [Input('url', 'pathname')])
+def navigate_pages(pathname):
+    if pathname == '/graph-page':
+        return graph_page_layout
+    else:
+        return main_page_layout
+
+
+app.layout = html.Div([
+    dcc.Location(id='url', refresh=False),
+    html.Div(id='page-content')
 ])
 
 if __name__ == '__main__':
