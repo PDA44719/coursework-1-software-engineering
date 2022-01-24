@@ -11,6 +11,7 @@ from dash.dependencies import Output, Input
 # Select the style sheet and define the app
 external_stylesheets = [dbc.themes.LUX]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app.config['suppress_callback_exceptions'] = True
 
 # Read the Excel file and generate the dataset
 df = pd.read_excel('prepared_dataset.xlsx', engine='openpyxl')  # Read the dataset
@@ -67,6 +68,14 @@ for i in range(len(genres)):
                   labels={'Genre Revenue per Movie': 'Genre Revenue per Movie (USD)',
                           'Overall Genre Revenue': 'Overall Genre Revenue (USD)'})
 
+    # Resort the values and generate fig2
+    genres_df.sort_values(by=['Overall Genre Revenue'], inplace=True)
+    fig2 = px.bar(genres_df, x='Genre', y='Overall Genre Revenue',
+                  hover_data=['Genre Revenue per Movie', 'Number of Movies'],
+                  labels={'Genre Revenue per Movie': 'Genre Revenue per Movie (USD)',
+                          'Overall Genre Revenue': 'Overall Genre Revenue (USD)'},
+                  )
+
 # Create the card containing the first image
 card1 = dbc.Card(
     [
@@ -87,7 +96,6 @@ card1 = dbc.Card(
     ],
 )
 
-
 main_page_layout = html.Div([
     html.H1(children='Dashboard'),
     html.Div(id='main_page_content'),
@@ -97,12 +105,24 @@ main_page_layout = html.Div([
     ]),
 ])
 
-
 graph_page_layout = html.Div([
     html.H1(children='Specific Graph'),
     html.Div(id='graph_page_content'),
     dbc.Row([
-        dbc.Col([dcc.Graph(figure=fig1)], width={"size": 6, "offset": 3})
+        dbc.Col([
+            dcc.Dropdown(
+                id='dropdown1',
+                options=[
+                    {'label': 'Genre Revenue per Movie', 'value': 'type1'},
+                    {'label': 'Overall Genre Revenue', 'value': 'type2'}
+                ],
+                value='type1',  # Starting on the Genre Revenue per Move
+                clearable=False  # Do not allow the dropdown value to be None
+            ),
+        ], width={"size": 6, "offset": 3})
+    ]),
+    dbc.Row([
+        dbc.Col([dcc.Graph(id='graph_1')], width={"size": 6, "offset": 3})
     ]),
     dbc.Row([
         dbc.Col([dbc.Button("Go back to main page", color='primary', href='main-page')], width={"size": 4, "offset": 8})
@@ -118,6 +138,16 @@ def navigate_pages(pathname):
         return graph_page_layout
     else:
         return main_page_layout
+
+
+# Select the y axis for graph 1
+@app.callback(Output('graph_1', component_property='figure'),
+              [Input('dropdown1', 'value')])
+def change_y_axis(value):
+    if value == 'type1':
+        return fig1
+    else:
+        return fig2
 
 
 app.layout = html.Div([
