@@ -1,3 +1,7 @@
+# TODO: Add more interaction to the graphs (especially, the last ones).
+#       Fix the height of the rows.
+#       Include titles, modify axis labels, potentially change the styling (if required).
+
 # Run this app with `python dash_app.py` and visit http://127.0.0.1:8050/ in your web browser.
 import dash
 from dash import html
@@ -42,10 +46,9 @@ main_page_layout = html.Div([
     dbc.Row([
         dbc.Col([create_card('assets/graph1.png', 'graph-page-1')], width=3),
         dbc.Col([create_card('assets/graph2.png', 'graph-page-2')], width=3),
-        dbc.Col([create_card('assets/graph1.png', 'graph-page-1')], width=3),
-        dbc.Col([create_card('assets/graph1.png', 'graph-page-1')], width=3),
-        dbc.Col([create_card('assets/graph1.png', 'graph-page-1')], width=3),
-        dbc.Col([create_card('assets/graph1.png', 'graph-page-1')], width=3)
+        dbc.Col([create_card('assets/graph3.png', 'graph-page-3')], width=3),
+        dbc.Col([create_card('assets/graph4.png', 'graph-page-4')], width=3),
+        dbc.Col([create_card('assets/graph5.png', 'graph-page-5')], width=3)
     ]),
 ])
 
@@ -65,7 +68,7 @@ def create_graph_page_with_dropdown(graph_id, dropdown_id, dropdown_options, sta
             ], width={"size": 6, "offset": 3})
         ]),
         dbc.Row([
-            dbc.Col([dcc.Graph(id=graph_id)], width={"size": 6, "offset": 3})
+            dbc.Col([dcc.Graph(id=graph_id)], width={"size": 8, "offset": 2})
         ]),
         dbc.Row([
             dbc.Col([dbc.Button("Go back to main page", color='primary', href='main-page')],
@@ -74,6 +77,22 @@ def create_graph_page_with_dropdown(graph_id, dropdown_id, dropdown_options, sta
     ])
 
     return graph_page_layout
+
+
+def create_simple_graph_page(fig):
+    layout = html.Div([
+        html.H1(children='Specific Graph'),
+        html.Div(),
+        dbc.Row([
+            dbc.Col([dcc.Graph(figure=fig)], width={"size": 8, "offset": 2})
+        ]),
+        dbc.Row([
+            dbc.Col([dbc.Button("Go back to main page", color='primary', href='main-page')],
+                    width={"size": 4, "offset": 8})
+        ])
+    ])
+
+    return layout
 
 
 # Go through the different pages
@@ -90,6 +109,15 @@ def navigate_pages(pathname):
                             {'label': 'Average of Revenue', 'value': 'type2_2'},
                             {'label': 'Number of movies', 'value': 'type2_3'}]
         return create_graph_page_with_dropdown('graph_2', 'dropdown2', dropdown_options, 'type2_1')
+
+    if pathname == '/graph-page-3':
+        return create_simple_graph_page(cc.fig6)
+
+    if pathname == '/graph-page-4':
+        return create_simple_graph_page(cc.fig7)
+
+    if pathname == '/graph-page-5':
+        return create_simple_graph_page(cc.fig8)
 
     else:
         return main_page_layout
