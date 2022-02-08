@@ -1,6 +1,7 @@
 # TODO: Add more interaction to the graphs (especially, the last ones).
 #       Fix the height of the rows.
 #       Include titles, modify axis labels, potentially change the styling (if required).
+#       Include better names for the figures
 
 # Run this app with `python dash_app.py` and visit http://127.0.0.1:8050/ in your web browser.
 import dash
@@ -9,6 +10,7 @@ from dash import dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input
 from chart_creator_module import ChartCreator
+import collections
 
 # Select the style sheet and define the app
 external_stylesheets = [dbc.themes.LUX]
@@ -53,7 +55,19 @@ main_page_layout = html.Div([
 ])
 
 
-def create_graph_page_with_dropdown(graph_id, dropdown_id, dropdown_options, starting_value):
+def create_checklist_card(checklist_id):
+    card = dbc.Card(className="bg-dark text-light", children=[
+        dbc.CardBody([
+            html.H4('Options', className="card-title"),
+            html.Br(),
+            dcc.Checklist(id=checklist_id)
+        ])
+    ])
+
+    return card
+
+
+def create_graph_page_with_dropdown(graph_id, dropdown_id, dropdown_options, starting_value, checklist_id):
     graph_page_layout = html.Div([
         html.H1(children='Specific Graph'),
         html.Div(),
@@ -62,13 +76,24 @@ def create_graph_page_with_dropdown(graph_id, dropdown_id, dropdown_options, sta
                 dcc.Dropdown(
                     id=dropdown_id,
                     options=dropdown_options,
-                    value=starting_value,  # Starting on the Genre Revenue per Move
+                    value=starting_value,
+                    className='dropdown_list',
                     clearable=False  # Do not allow the dropdown value to be None
                 ),
             ], width={"size": 6, "offset": 3})
         ]),
         dbc.Row([
-            dbc.Col([dcc.Graph(id=graph_id)], width={"size": 8, "offset": 2})
+            dbc.Col([
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                create_checklist_card(checklist_id)
+            ], width={"size": 2, "offset": 1}),
+            dbc.Col([dcc.Graph(id=graph_id)], width=8)
         ]),
         dbc.Row([
             dbc.Col([dbc.Button("Go back to main page", color='primary', href='main-page')],
@@ -97,18 +122,19 @@ def create_simple_graph_page(fig):
 
 # Go through the different pages
 @app.callback(Output('page-content', 'children'),
-              [Input('url', 'pathname')])
+              Input('url', 'pathname')
+              )
 def navigate_pages(pathname):
     if pathname == '/graph-page-1':
         dropdown_options = [{'label': 'Genre Revenue per Movie', 'value': 'type1_1'},
                             {'label': 'Overall Genre Revenue', 'value': 'type1_2'}]
-        return create_graph_page_with_dropdown('graph_1', 'dropdown1', dropdown_options, 'type1_1')
+        return create_graph_page_with_dropdown('graph_1', 'dropdown1', dropdown_options, 'type1_1', 'chck1')
 
     if pathname == '/graph-page-2':
         dropdown_options = [{'label': 'Sum of Revenue', 'value': 'type2_1'},
                             {'label': 'Average of Revenue', 'value': 'type2_2'},
                             {'label': 'Number of movies', 'value': 'type2_3'}]
-        return create_graph_page_with_dropdown('graph_2', 'dropdown2', dropdown_options, 'type2_1')
+        return create_graph_page_with_dropdown('graph_2', 'dropdown2', dropdown_options, 'type2_1', 'chck2')
 
     if pathname == '/graph-page-3':
         return create_simple_graph_page(cc.fig6)
@@ -125,12 +151,26 @@ def navigate_pages(pathname):
 
 # Select the y axis for graph 1
 @app.callback(Output('graph_1', component_property='figure'),
-              [Input('dropdown1', 'value')])
-def change_y_axis(value):
-    if value == 'type1_1':
-        return cc.fig1
-    else:
+              Input('dropdown1', 'value'),
+              Input('chck1', 'value'))
+def change_y_axis(selected_y, selected_chart_options):
+    # If selected_chart_options is None, convert to an empty list to avoid exception 'NoneType' is not iterable
+    if selected_chart_options is None:
+        selected_chart_options = []
+
+    # If the user has not selected Show Preferred Genres option
+    if selected_y == 'type1_2' and 'SPG' not in selected_chart_options:
         return cc.fig2
+    elif selected_y == 'type1_2':  # If user has selected the Show Preferred Genres
+        return cc.fig12
+    elif selected_y == 'type1_1' and selected_chart_options == ['SPG']:
+        return cc.fig10
+    elif selected_y == 'type1_1' and selected_chart_options == ['SEB']:
+        return cc.fig11
+    elif selected_y == 'type1_1' and collections.Counter(selected_chart_options) == collections.Counter(['SEB', 'SPG']):
+        return cc.fig9
+    else:
+        return cc.fig1
 
 
 # Select the y axis for graph 1
@@ -143,6 +183,16 @@ def change_y_axis(value):
         return cc.fig4
     else:
         return cc.fig5
+
+
+@app.callback(Output('chck1', 'options'),
+              Input('dropdown1', 'value'))
+def modify_checklist(dropdown_value):
+    if dropdown_value == 'type1_1':
+        return [{'label': 'Show Preferred Genres', 'value': 'SPG'},
+                {'label': 'Show Error Bars', 'value': 'SEB'}]
+    else:
+        return [{'label': 'Show Preferred Genres', 'value': 'SPG'}]
 
 
 app.layout = html.Div([
