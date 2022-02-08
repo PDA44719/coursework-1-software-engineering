@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 import math
+import copy
 
 
 class ChartCreator:
@@ -11,7 +12,7 @@ class ChartCreator:
         self.__df = self.__create_df()
         self.__genres_df = self.__create_genres_df()
         self.__dist_df = self.__create_distributors_df()
-        self.__fig1, self.__fig2 = self.__create_figs_12()
+        self.__fig1, self.__fig2, self.__fig9, self.__fig10, self.__fig11, self.__fig12 = self.__create_figs_12910()
         self.__fig3, self.__fig4, self.__fig5 = self.__create_figs_345()
         self.__fig6 = self.__create_f6()
         self.__fig7, self.__fig8 = self.__create_figs_78()
@@ -24,47 +25,14 @@ class ChartCreator:
         return df
 
     def __create_genres_df(self):
-        list_of_genres = [genre for column_data in self.__df['Genres'] for genre in column_data]
-
-        # Obtain the set of genres (no repetition)
-        set_of_genres = set()
-        for genre in list_of_genres:
-            set_of_genres.add(genre)
-
-        # Get the number of movies that contain each genre, the total revenue and the average rating
-        genres = list(set_of_genres)  # Convert the genres back to a list
-        n_of_movies = []
-        genre_revenue = []
-        total_rating = []
-        for i in range(len(genres)):
-            # Each of the categories will start at 0
-            n_of_movies.append(0)
-            genre_revenue.append(0)
-            total_rating.append(0)
-
-            # Go through each of the movies and update the three categories
-            for index, row in self.__df.iterrows():  # Iterate through the dataframe rows
-                if genres[i] in row['Genres']:  # If the movie contains the specific genre in the list
-                    # Update categories
-                    n_of_movies[i] = n_of_movies[i] + 1
-                    genre_revenue[i] = genre_revenue[i] + row['Revenue']
-                    total_rating[i] = total_rating[i] + row['Rating']
-
-        # Get the average revenue per movie for each of the genres
-        revenue_per_movie = []
-        for i in range(len(genre_revenue)):
-            revenue_per_movie.append(round((genre_revenue[i] / n_of_movies[i]), 2))
-
-        # Get the average rating of each genre
-        average_rating = []
-        for i in range(len(total_rating)):
-            average_rating.append(round((total_rating[i] / n_of_movies[i]), 2))
-
-        # Create the new dataframe
-        genres_df = pd.DataFrame(list(zip(genres, n_of_movies, genre_revenue, revenue_per_movie, average_rating)),
-                                 columns=['Genre', 'Number of Movies', 'Overall Genre Revenue',
-                                          'Genre Revenue per Movie',
-                                          'Average Rating'])
+        genres_no_repetition = list(set([genre for column_data in self.__df['Genres'] for genre in column_data]))
+        genres_info = self.__extract_sms('Genres', genres_no_repetition, ['Revenue', 'Rating'])
+        genres_df = pd.DataFrame(genres_info,
+                                 columns=['Genre', 'Revenue', 'Mean Revenue', 'SD Revenue', 'Rating', 'Mean Rating',
+                                          'SD Rating', 'Number of Movies']
+                                 )
+        genres_df['Standard Error (Revenue)'] = genres_df.apply(
+            lambda x: round(x['SD Revenue'] / math.sqrt(x['Number of Movies']), 2), axis=1)
         return genres_df
 
     def __create_distributors_df(self):
@@ -74,8 +42,9 @@ class ChartCreator:
 
         # Extract information about each of the distribution companies
         info = self.__extract_sms('Distributor', list_of_distributors_no_repetition, ['Revenue', 'Rating'])
-        dist_df = pd.DataFrame(info, columns=['Distributor', 'Revenue', 'Mean Revenue', 'SD Revenue', 'Rating', 'Mean Rating',
-                                              'SD Rating', 'Number of Movies'])
+        dist_df = pd.DataFrame(info,
+                               columns=['Distributor', 'Revenue', 'Mean Revenue', 'SD Revenue', 'Rating', 'Mean Rating',
+                                        'SD Rating', 'Number of Movies'])
         return dist_df
 
     def __extract_sms(self, column, column_elements, list_of_variables):
@@ -94,23 +63,68 @@ class ChartCreator:
             output_list[-1].append(len(values))  # Number of movies
         return output_list
 
-    def __create_figs_12(self):
-        # Sort values for the first plot
-        self.__genres_df.sort_values(by=['Genre Revenue per Movie'], inplace=True)
+    def __produce_color_list(self, preferred_genres, base_color, secondary_color):
+        color_list = [base_color] * len(self.__genres_df.index)
+        preferred_genres_pos = []
+        genres_list = self.__genres_df['Genre'].tolist()
+        for i in range(len(genres_list)):
+            if genres_list[i] in preferred_genres:
+                preferred_genres_pos.append(i)
 
-        fig1 = px.bar(self.__genres_df, x='Genre', y='Genre Revenue per Movie',
-                      hover_data=['Overall Genre Revenue', 'Number of Movies'],
-                      labels={'Genre Revenue per Movie': 'Genre Revenue per Movie (USD)',
-                              'Overall Genre Revenue': 'Overall Genre Revenue (USD)'})
+        for genre_pos, color in zip(preferred_genres_pos, color_list):
+            color_list[genre_pos] = secondary_color
+
+        return color_list
+
+    @staticmethod
+    def __create_bar_chart(data_x, data_y, bar_colors, customdata, hovertemplate, error=None):
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=data_x,
+            y=data_y,
+            customdata=customdata,
+            marker_color=bar_colors,  # marker color can be a single color value or an iterable
+            hovertemplate=hovertemplate,
+            error_y=dict(type='data', array=error),
+            name=''
+        ))
+        fig.update_layout(template='plotly_white')
+
+        return fig
+
+    def __create_figs_12910(self):
+        preferred_genres = ['History', 'Romance', 'Action']
+        # Sort values for the first plot
+        self.__genres_df.sort_values(by=['Mean Revenue'], inplace=True)
+        colors_fig1 = ['lightslategray'] * len(self.__genres_df.index)
+        custom_df19 = np.stack((self.__genres_df['Mean Revenue'], self.__genres_df['Number of Movies']), axis=-1)
+        hovertemplate_fig19 = 'Mean Revenue: %{customdata[0]:.0f} (USD) <br><b>Number of Movies: %{customdata[1]:.0f}'
+        colors_fig9 = self.__produce_color_list(preferred_genres, 'lightslategray', 'crimson')
+
+        fig1 = self.__create_bar_chart(self.__genres_df['Genre'], self.__genres_df['Mean Revenue'],
+                                       colors_fig1, custom_df19, hovertemplate_fig19)
+
+        fig9 = self.__create_bar_chart(self.__genres_df['Genre'], self.__genres_df['Mean Revenue'],
+                                       colors_fig9, custom_df19, hovertemplate_fig19, self.__genres_df['Standard Error (Revenue)'])
+
+        fig10 = self.__create_bar_chart(self.__genres_df['Genre'], self.__genres_df['Mean Revenue'],
+                                        colors_fig9, custom_df19, hovertemplate_fig19)
+
+        fig11 = self.__create_bar_chart(self.__genres_df['Genre'], self.__genres_df['Mean Revenue'],
+                                        colors_fig1, custom_df19, hovertemplate_fig19, self.__genres_df['Standard Error (Revenue)'])
 
         # Resort the values and generate fig2
-        self.__genres_df.sort_values(by=['Overall Genre Revenue'], inplace=True)
-        fig2 = px.bar(self.__genres_df, x='Genre', y='Overall Genre Revenue',
-                      hover_data=['Genre Revenue per Movie', 'Number of Movies'],
-                      labels={'Genre Revenue per Movie': 'Genre Revenue per Movie (USD)',
-                              'Overall Genre Revenue': 'Overall Genre Revenue (USD)'},
-                      )
-        return fig1, fig2
+        self.__genres_df.sort_values(by=['Revenue'], inplace=True)
+
+        colors_fig2 = self.__produce_color_list(preferred_genres, 'lightslategray', 'crimson')
+        custom_df2 = np.stack((self.__genres_df['Revenue'], self.__genres_df['Number of Movies']), axis=-1)
+        hovertemplate_fig2 = 'Overall Revenue: %{customdata[0]:.0f} (USD) <br><b>Number of Movies: %{customdata[1]:.0f}'
+        fig2 = self.__create_bar_chart(self.__genres_df['Genre'], self.__genres_df['Revenue'],
+                                       colors_fig1, custom_df2, hovertemplate_fig2)
+        fig12 = self.__create_bar_chart(self.__genres_df['Genre'], self.__genres_df['Revenue'],
+                                        colors_fig2, custom_df2, hovertemplate_fig2)
+
+        return fig1, fig2, fig9, fig10, fig11, fig12
 
     def __create_figs_345(self):
         fig3 = px.histogram(self.__df, x='Runtime', y='Revenue', log_y=True, nbins=10)
@@ -153,9 +167,11 @@ class ChartCreator:
         fig7 = px.treemap(self.__dist_df, path=[px.Constant("Distribution Companies"), 'Distributor'], values='Revenue',
                           color='Number of Movies',
                           color_continuous_scale='RdBu',
-                          color_continuous_midpoint=np.average(self.__dist_df['Number of Movies'], weights=self.__dist_df['Revenue']))
+                          color_continuous_midpoint=np.average(self.__dist_df['Number of Movies'],
+                                                               weights=self.__dist_df['Revenue']))
 
-        self.__dist_df['Standard Error (Revenue)'] = self.__dist_df.apply(lambda x: round(x['SD Revenue']/math.sqrt(x['Number of Movies']), 2), axis=1)
+        self.__dist_df['Standard Error (Revenue)'] = self.__dist_df.apply(
+            lambda x: round(x['SD Revenue'] / math.sqrt(x['Number of Movies']), 2), axis=1)
         self.__dist_df.sort_values(by=['Mean Revenue'], inplace=True)
         fig8 = go.Figure(layout=go.Layout(bargap=0.3))
         fig8.add_trace(go.Bar(
@@ -198,3 +214,19 @@ class ChartCreator:
     @property
     def fig8(self):
         return self.__fig8
+
+    @property
+    def fig9(self):
+        return self.__fig9
+
+    @property
+    def fig10(self):
+        return self.__fig10
+
+    @property
+    def fig11(self):
+        return self.__fig11
+
+    @property
+    def fig12(self):
+        return self.__fig12
