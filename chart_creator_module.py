@@ -105,13 +105,15 @@ class ChartCreator:
                                        colors_fig1, custom_df19, hovertemplate_fig19)
 
         fig9 = self.__create_bar_chart(self.__genres_df['Genre'], self.__genres_df['Mean Revenue'],
-                                       colors_fig9, custom_df19, hovertemplate_fig19, self.__genres_df['Standard Error (Revenue)'])
+                                       colors_fig9, custom_df19, hovertemplate_fig19,
+                                       self.__genres_df['Standard Error (Revenue)'])
 
         fig10 = self.__create_bar_chart(self.__genres_df['Genre'], self.__genres_df['Mean Revenue'],
                                         colors_fig9, custom_df19, hovertemplate_fig19)
 
         fig11 = self.__create_bar_chart(self.__genres_df['Genre'], self.__genres_df['Mean Revenue'],
-                                        colors_fig1, custom_df19, hovertemplate_fig19, self.__genres_df['Standard Error (Revenue)'])
+                                        colors_fig1, custom_df19, hovertemplate_fig19,
+                                        self.__genres_df['Standard Error (Revenue)'])
 
         # Resort the values and generate fig2
         self.__genres_df.sort_values(by=['Revenue'], inplace=True)
@@ -133,16 +135,28 @@ class ChartCreator:
         return fig3, fig4, fig5
 
     def __create_f6(self):
-        layout = go.Layout(template='simple_white')
+        # Get the x data value
+        x_data = []
+        for index, row in self.__df.iterrows():
+            if row['Release Date'] not in x_data:
+                x_data.append(row['Release Date'])
+
+        # Get the y data
+        y_data = []
+        for date in x_data:
+            y_data.append(sum([row['Revenue'] for index, row in self.__df.iterrows() if date == row['Release Date']]))
+
+        layout = go.Layout(template='plotly_white')
         fig6 = go.Figure(layout=layout)
         fig6.add_trace(
-            go.Scatter(x=self.__df['Release Date'], y=self.__df['Revenue'], fill='tonexty'))  # Add the movie data
+            go.Scatter(x=x_data, y=y_data, fill='tonexty'))  # Add the movie data
 
         # Add a green region (pre-covid area)
         fig6.add_vrect(
             x0="2018-01-01", x1="2020-03-15",
             fillcolor="rgb(0,255,0)", opacity=0.3,
             layer="below", line_width=0,
+            annotation_text='Pre-Lockdown', annotation_position='top left', annotation_font_color='grey'
         )
 
         # Add a red region (1st Lockdown area)
@@ -150,6 +164,7 @@ class ChartCreator:
             x0="2020-03-15", x1="2020-07-15",
             fillcolor="rgb(255,0,0)", opacity=0.3,
             layer="below", line_width=0,
+            annotation_text='Lockdown', annotation_position='top left', annotation_font_color='grey'
         ),
 
         # Add a yellow region (post-lockdown)
@@ -157,6 +172,7 @@ class ChartCreator:
             x0="2020-07-15", x1="2021-10-21",
             fillcolor="rgb(255,153,0)", opacity=0.3,
             layer="below", line_width=0,
+            annotation_text='Post-Lockdown', annotation_position='top right', annotation_font_color='grey'
         )
 
         fig6.update_yaxes(range=[0, 2.9 * math.pow(10, 9)])
