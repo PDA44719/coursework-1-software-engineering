@@ -55,12 +55,12 @@ main_page_layout = html.Div([
 ])
 
 
-def create_checklist_card(checklist_id):
+def create_checklist_card(checklist_id, checklist_options=[]):
     card = dbc.Card(className="bg-dark text-light", children=[
         dbc.CardBody([
             html.H4('Options', className="card-title"),
             html.Br(),
-            dcc.Checklist(id=checklist_id)
+            dcc.Checklist(id=checklist_id, options=checklist_options)
         ])
     ])
 
@@ -104,6 +104,33 @@ def create_graph_page_with_dropdown(graph_id, dropdown_id, dropdown_options, sta
     return graph_page_layout
 
 
+def layout_page_dropdown(graph_id, dropdown_id, dropdown_options, starting_value):
+    graph_page_layout = html.Div([
+        html.H1(children='Specific Graph'),
+        html.Div(),
+        dbc.Row([
+            dbc.Col([
+                dcc.Dropdown(
+                    id=dropdown_id,
+                    options=dropdown_options,
+                    value=starting_value,
+                    className='dropdown_list',
+                    clearable=False  # Do not allow the dropdown value to be None
+                ),
+            ], width={"size": 6, "offset": 3})
+        ]),
+        dbc.Row([
+            dbc.Col([dcc.Graph(id=graph_id)], width={"size": 8, "offset": 2})
+        ]),
+        dbc.Row([
+            dbc.Col([dbc.Button("Go back to main page", color='primary', href='main-page')],
+                    width={"size": 4, "offset": 8})
+        ])
+    ])
+
+    return graph_page_layout
+
+
 def create_simple_graph_page(fig):
     layout = html.Div([
         html.H1(children='Specific Graph'),
@@ -120,6 +147,31 @@ def create_simple_graph_page(fig):
     return layout
 
 
+def multiple_layout_with_dropdown(dropdown_id, dropdown_options, starting_value, row_id):
+    graph_page_layout = html.Div([
+        html.H1(children='Specific Graph'),
+        html.Div(),
+        dbc.Row([
+            dbc.Col([
+                dcc.Dropdown(
+                    id=dropdown_id,
+                    options=dropdown_options,
+                    value=starting_value,
+                    className='dropdown_list',
+                    clearable=False  # Do not allow the dropdown value to be None
+                ),
+            ], width={"size": 6, "offset": 3})
+        ]),
+        dbc.Row(id=row_id),  # This is the row that will be modified depending on the value of the dropdown
+        dbc.Row([
+            dbc.Col([dbc.Button("Go back to main page", color='primary', href='main-page')],
+                    width={"size": 4, "offset": 8})
+        ])
+    ])
+
+    return graph_page_layout
+
+
 # Go through the different pages
 @app.callback(Output('page-content', 'children'),
               Input('url', 'pathname')
@@ -134,13 +186,15 @@ def navigate_pages(pathname):
         dropdown_options = [{'label': 'Sum of Revenue', 'value': 'type2_1'},
                             {'label': 'Average of Revenue', 'value': 'type2_2'},
                             {'label': 'Number of movies', 'value': 'type2_3'}]
-        return create_graph_page_with_dropdown('graph_2', 'dropdown2', dropdown_options, 'type2_1', 'chck2')
+        return layout_page_dropdown('graph_2', 'dropdown2', dropdown_options, 'type2_1')
 
     if pathname == '/graph-page-3':
         return create_simple_graph_page(cc.fig6)
 
     if pathname == '/graph-page-4':
-        return create_simple_graph_page(cc.fig7)
+        dropdown_options = [{'label': 'Overall Distributor Revenue', 'value': 'type4_1'},
+                            {'label': 'Average Distributor Revenue', 'value': 'type4_2'}]
+        return multiple_layout_with_dropdown('dropdown4', dropdown_options, 'type4_1', 'modifiable_row')
 
     if pathname == '/graph-page-5':
         return create_simple_graph_page(cc.fig8)
@@ -193,6 +247,47 @@ def modify_checklist(dropdown_value):
                 {'label': 'Show Error Bars', 'value': 'SEB'}]
     else:
         return [{'label': 'Show Preferred Genres', 'value': 'SPG'}]
+
+
+@app.callback(Output('graph_4', 'figure'),
+              Input('dropdown4', 'value'))
+def update_graph4_layout(dropdown_value):
+    if dropdown_value == 'type4_2':
+        return cc.fig8
+    else:
+        return cc.fig7
+
+
+@app.callback(Output('modifiable_row', 'children'),
+              Input('dropdown4', 'value'))
+def modify_graph4_row(dropdown_value):
+    if dropdown_value == 'type4_1':
+        return dbc.Col([dcc.Graph(id='graph_4')], width={"size": 8, "offset": 2})
+    else:
+        row_layout = dbc.Row([
+            dbc.Col([
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                create_checklist_card('chck4')
+            ], width={"size": 2, "offset": 1}),
+            dbc.Col([dcc.Graph(id='graph_4')], width=8)
+        ])
+        return row_layout
+
+
+@app.callback(Output('chck4', 'options'),
+              Input('dropdown4', 'value'))
+def define_chck4_options(dropdown_value):
+    if dropdown_value == 'type4_2':
+        options = [{'label': 'Show Error Bars', 'value': 'SEB'}]
+        return options
+    else:
+        return []
 
 
 app.layout = html.Div([
