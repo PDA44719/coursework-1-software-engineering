@@ -15,7 +15,7 @@ class ChartCreator:
         self.__fig1, self.__fig2, self.__fig9, self.__fig10, self.__fig11, self.__fig12 = self.__create_figs_12910()
         self.__fig3, self.__fig4, self.__fig5 = self.__create_figs_345()
         self.__fig6 = self.__create_f6()
-        self.__fig7, self.__fig8 = self.__create_figs_78()
+        self.__fig7, self.__fig8, self.__fig13 = self.__create_figs_78()
 
     def __create_df(self):
         # Read the Excel file and generate the dataset
@@ -179,6 +179,16 @@ class ChartCreator:
         fig6.update_layout(hovermode='x unified')
         return fig6
 
+    def __create_horizontal_barchart(self, error=None):
+        fig= go.Figure(layout=go.Layout(bargap=0.3))
+        fig.add_trace(go.Bar(
+            y=self.__dist_df['Distributor'], x=self.__dist_df['Mean Revenue'],
+            error_x=dict(type='data', array=error),
+            orientation='h'))
+        fig.update_xaxes(type='log')
+        fig.update_yaxes(tickfont_size=9)  # Any size above this one does not allow the labels to be seen
+        return fig
+
     def __create_figs_78(self):
         fig7 = px.treemap(self.__dist_df, path=[px.Constant("Distribution Companies"), 'Distributor'], values='Revenue',
                           color='Number of Movies',
@@ -189,15 +199,9 @@ class ChartCreator:
         self.__dist_df['Standard Error (Revenue)'] = self.__dist_df.apply(
             lambda x: round(x['SD Revenue'] / math.sqrt(x['Number of Movies']), 2), axis=1)
         self.__dist_df.sort_values(by=['Mean Revenue'], inplace=True)
-        fig8 = go.Figure(layout=go.Layout(bargap=0.3))
-        fig8.add_trace(go.Bar(
-            y=self.__dist_df['Distributor'], x=self.__dist_df['Mean Revenue'],
-            # width = [0.3]*30,
-            error_x=dict(type='data', array=self.__dist_df['Standard Error (Revenue)']),
-            orientation='h'))
-        fig8.update_xaxes(type='log')
-        fig8.update_yaxes(tickfont_size=9)  # Any size above this one does not allow the labels to be seen
-        return fig7, fig8
+        fig8 = self.__create_horizontal_barchart(self.__dist_df['Standard Error (Revenue)'])
+        fig13 = self.__create_horizontal_barchart()
+        return fig7, fig8, fig13
 
     @property
     def fig1(self):
@@ -246,3 +250,7 @@ class ChartCreator:
     @property
     def fig12(self):
         return self.__fig12
+
+    @property
+    def fig13(self):
+        return self.__fig13
