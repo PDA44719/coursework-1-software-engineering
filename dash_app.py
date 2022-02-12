@@ -122,7 +122,7 @@ def layout_page_dropdown(graph_id, dropdown_id, dropdown_options, starting_value
             ], width={"size": 6, "offset": 3})
         ]),
         dbc.Row([
-            dbc.Col([dcc.Graph(figure=cc.fig3, id=graph_id)], width={"size": 8, "offset": 2})
+            dbc.Col([dcc.Graph(figure=cc.fig7, id=graph_id)], width={"size": 8, "offset": 2})
         ]),
         dbc.Row([
             dbc.Col([dbc.Button("Go back to main page", color='primary', href='main-page')],
@@ -192,7 +192,7 @@ def navigate_pages(pathname):
         return layout_page_dropdown('graph_2', 'dropdown2', dropdown_options, 'type2_1')
 
     if pathname == '/graph-page-3':
-        return create_simple_graph_page(cc.fig6)
+        return create_simple_graph_page(cc.fig10)
 
     if pathname == '/graph-page-4':
         dropdown_options = [{'label': 'Overall Distributor Revenue', 'value': 'type4_1'},
@@ -214,15 +214,15 @@ def change_y_axis(selected_y, selected_chart_options):
 
     # If the user has not selected Show Preferred Genres option
     if selected_y == 'type1_2' and 'SPG' not in selected_chart_options:
-        return cc.fig2
+        return cc.fig5
     elif selected_y == 'type1_2':  # If user has selected the Show Preferred Genres
-        return cc.fig12
+        return cc.fig6
     elif selected_y == 'type1_1' and selected_chart_options == ['SPG']:
-        return cc.fig10
+        return cc.fig3
     elif selected_y == 'type1_1' and selected_chart_options == ['SEB']:
-        return cc.fig11
+        return cc.fig4
     elif selected_y == 'type1_1' and collections.Counter(selected_chart_options) == collections.Counter(['SEB', 'SPG']):
-        return cc.fig9
+        return cc.fig2
     else:
         return cc.fig1
 
@@ -232,11 +232,11 @@ def change_y_axis(selected_y, selected_chart_options):
               [Input('dropdown2', 'value')])
 def change_y_axis(value):
     if value == 'type2_1':
-        return cc.fig3
+        return cc.fig7
     elif value == 'type2_2':
-        return cc.fig4
+        return cc.fig8
     else:
-        return cc.fig5
+        return cc.fig9
 
 
 @app.callback(Output('chck1', 'options'),
@@ -249,7 +249,7 @@ def modify_checklist(dropdown_value):
         return [{'label': 'Show Preferred Genres', 'value': 'SPG'}]
 
 
-type4_1_layout = dbc.Col([dcc.Graph(figure=cc.fig7)], width={"size": 8, "offset": 2}, id='type4_1_layout')
+type4_1_layout = dbc.Col([dcc.Graph(figure=cc.fig11)], width={"size": 8, "offset": 2}, id='type4_1_layout')
 type4_2_layout = dbc.Row([
     dbc.Col([
         html.Br(),
@@ -286,7 +286,7 @@ def error_bars(checklist_value):
     if checklist_value is None or checklist_value == []:
         return cc.fig13
     else:
-        return cc.fig8
+        return cc.fig12
 
 
 app.layout = html.Div([
