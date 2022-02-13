@@ -16,7 +16,7 @@ The question that this visualisation is intended to answer. Use the questions yo
 **The target audience is the same for all visualizations. I should probably ask whether I have to comment on it every
 time**.
 ### Graph 1
-The first question that will be addressed is the following: **"Which movie genres are more profitable?"**. To answer
+The first question that will be addressed is the following: **Which movie genres are more profitable?**. To answer
 this question, the **"Genres"** column will be used. I will be adding the revenue of movies that contain a specific
 genre (i.e., for each of the genres), and then I will compute the average.
 
@@ -27,16 +27,28 @@ then using a bar chart or a pie chart may be a good idea". As movie genres are c
 use one of the two different types. I will not be using a pie chart, because movies can have more than one genre.
 Hence, the percentages displayed on that chart would be misleading.
 
+Another aspect that must be considered is the fact that not all movies have been considered: there are movies that came
+out after the creation of the dataset and others that came out before 2018 that have not been included. Hence, we want
+to know the accuracy of our calculations when it comes to predicting revenues of the overall movies (not just the sample
+of movies utilized for the figures). For that matter, bars will be included representing the standard error of each
+genre. [5] gives a good explanation about the standard error, with a very good example about the average age of people
+that are diagnosed with Alzheimer's (furthermore, it also includes details about how to calculate it).
+
 #### Visual Aspects
 The main issue with this graph is that it could be deceitful should it not be titled properly. In **(the truthful art)
-(required citation [1])**, the five qualities of great visualizations are explored. One of them is truthfulness, for which
-the designer must ask: "is anything being obscured?". If the title was named: **Genre Revenue per movie**, there would
-be some information omitted: movies usually have more than one genre. Therefore, we need a title that makes this clear.
-The title that was considered best is: **Average Revenue for Movies Containing
-Elements of Each Main Genre**. Furthermore, the addition
-of the keyword **Main** indicates the existence of other genres that may not have been considered in our graph.
+(required citation [1])**, the five qualities of great visualizations are explored. One of them is truthfulness, for
+which the designer must ask: **is anything being obscured?**. If the title was named: **Genre Revenue per Movie**, there
+would be some information omitted: movies usually have more than one genre. Therefore, we need a title that makes this
+clear.
 
-***Talk about styles and colors***. I may want to color the preferred genres that appear on the persona differently.
+The title that was considered best is: **Average Revenue for Movies Containing
+Elements of Each Main Genre**. Containing elements of indicates that movies can have elements that are not limited to
+just one genre. Furthermore, the addition
+of the word **Main** indicates the existence of other genres that may not have been considered in our graph.
+
+This graph is aimed at film producers, each of whom will have a set of preferred genres. Therefore, it would be ideal
+if users could have the option to highlight their own preferred genres so that they can have an easier time to visually
+understand how potentially profitable each of them can be.
 
 ### Graph 2
 The question to be addressed with this graph is: "What are the most popular runtimes and how much money do they make?"
@@ -78,3 +90,4 @@ regions whose colors must be opaque enough not to difficult the graph viewing).
 [2] https://towardsdatascience.com/data-visualization-101-how-to-choose-a-chart-type-9b8830e558d6
 [3] https://datavizcatalogue.com/search/distribution.html
 [4] https://visage.co/data-visualization-101-area-charts/
+[5] https://toptipbio.com/standard-error-formula/#:~:text=To%20calculate%20the%20standard%20error,of%20the%20number%20of%20samples.
