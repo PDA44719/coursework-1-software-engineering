@@ -26,13 +26,13 @@ option that the user has selected, a different figure will be displayed.
 
 ### Going Beyond the Teaching Material
 There are numerous things that I have done to go beyond the teaching material. Firstly, I have created a class to create
-the charts, and I have looked into privacy and encapsulation [A]. As I do not want users to be able to modify my charts
+the charts, and I have looked into privacy and encapsulation [1]. As I do not want users to be able to modify my charts
 and use them to potentially misinform other users, I have made all the attributes and methods private. Then, I have
-created some getter methods [B] that allow users to access the charts, but they are not allowed to modify them.
+created some getter methods [2] that allow users to access the charts, but they are not allowed to modify them.
 
 Apart from that, through a combination of defining the width and height of elements like graphs in my dashboard, I am
 allowing users with different screen sizes to be able to visualize the graphs properly (for this, I have looked into
-viewport units [C], which are defined as 'vh' within my code).
+viewport units [3], which are defined as 'vh' within my code).
 
 Furthermore, I have created charts that are more advanced than the ones shown in our lectures (e.g., I have created a
 treemap with a color scale, bar charts with error bars), I have created multiple callbacks that allow for a high
@@ -146,12 +146,12 @@ Any issues blocking progress? State the issues if so.
 - There have been no issues so far.
 
 ## References
-[A] @nikhilaggarwal3. (2019, November 26). Private Methods in Python. GeeksforGeeks. Retrieved February 10, 2022, from
+[1] @nikhilaggarwal3. (2019, November 26). Private Methods in Python. GeeksforGeeks. Retrieved February 10, 2022, from
 https://www.geeksforgeeks.org/private-methods-in-python/ 
 
-[B] Verma, A. (2019, December 4). Getter and Setter in Python. GeeksforGeeks. Retrieved February 10, 2022, from
+[2] Verma, A. (2019, December 4). Getter and Setter in Python. GeeksforGeeks. Retrieved February 10, 2022, from
 https://www.geeksforgeeks.org/getter-and-setter-in-python/ 
 
-[C] Suzanne, M. (2017, June 13). Fun with viewport units: CSS-tricks. CSS-Tricks. Retrieved February 14, 2022, from
+[3] Suzanne, M. (2017, June 13). Fun with viewport units: CSS-tricks. CSS-Tricks. Retrieved February 14, 2022, from
 https://css-tricks.com/fun-viewport-units/ 
 
