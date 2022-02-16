@@ -8,7 +8,7 @@ import copy
 
 class ChartCreator:
     """
-    A class that will create the different figures that will be displayed on the dashboard.
+    A class that creates the different figures that will be displayed on the dashboard.
 
     Arguments
     ---------
@@ -17,12 +17,18 @@ class ChartCreator:
 
     Attributes
     ----------
+    __df_file : str
+        The dataset path introduced when creating the class.
     __df : pandas.core.frame.DataFrame
-        The dataframe obtained by reading prepared_dataset.xlsx.
+        The dataframe obtained by reading the dataset file.
+    __genres_list : list
+        A list containing each individual genre on __df['Genres'].
+    __distributors_list : list
+        A list containing each distribution company on __df['Distributor'].
     __genres_df : pandas.core.frame.DataFrame
-        A dataframe containing information about each individual genre that appears on df['Genres'].
+        A dataframe containing information about each individual genre that appears on __genres_list.
     __dist_df : pandas.core.frame.DataFrame
-        A dataframe containing information about each distribution company that appears on df['Distributor'].
+        A dataframe containing information about each distribution company that appears on __distributors_list.
     __preferred_genres : list
         A list containing the preferred genres of the user. In this case, the preferred genres defined in persona.png
         will be utilized.
@@ -44,16 +50,22 @@ class ChartCreator:
     __create_df
         Read prepared_dataset.xlsx and convert to a dataframe.
     __create_specialized_df
-        Generate a dataframe containing information (overall, mean, standard deviation and standard error) about a
-        specific column in df (e.g., Genres, Distributors) with regards to different variables (e.g., Revenue, Rating).
+        Generate a dataframe containing information (overall, mean, standard deviation and standard error) about each
+        element in a categorical column in __df (e.g., Genres, Distributors) with regards to different numerical
+        variables (e.g., Revenue, Rating).
     --extract_sms
-        Generate a list containing information (overall, mean and standard deviation) about a specific column in df
-        (e.g., Genres, Distributors) with regards to different variables (e.g., Revenue, Rating).
+        Create a list containing information (overall, mean and standard deviation) about each element in a categorical
+        column in __df (e.g., Genres, Distributors) with regards to different numerical variables (e.g., Revenue,
+        Rating).
     __produce_color_lists
-        Create a couple of lists comprised of the colors for the bars of a bar chart. One of the lists will be
+        Produce a couple of lists comprised of the colors for the bars of a bar chart. One of the lists will be
         monochromatic and the other will have a different color for the bars representing the preferred user genres.
-    __create_bar_chart
-        Produce a bar chart figure for a specific set of data.
+    __create_barchart
+        Create a vertical bar chart figure for a specific set of data.
+    __create_horizontal_barchart
+        Produce a horizontal bar chart for the Distributor vs Mean Revenue relationship.
+    __add_labels
+        Add the labels and any other additional options to one or more figures.
     __create_graph1_figs_mean_revenue
         Generate __fig1, __fig2, __fig3 and __fig4.
     __create_graph1_figs_overall_revenue
@@ -62,24 +74,29 @@ class ChartCreator:
         Create __fig7, __fig8 and __fig9.
     __create_graph3_fig
         Generate __fig10.
-    __create_horizontal_barchart
-        Produce a horizontal bar chart for the Distributor vs Mean Revenue relationship.
     __create_graph4_figs
         Create __fig11, __fig12 and __fig13.
     fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11, fig12, fig13
         Getter methods to obtain the private figures.
 
-    *******
+
     """
 
     def __init__(self, dataset_path):
+        """Create an instance of the class"""
         self.__df_file = dataset_path
         self.__df = self.__create_df()
+
+        # Get the each genre without repetition. As the Genres column contains lists, a list of lists must be converted
+        # to a simple list before using set()
         self.__genres_list = list(set([genre for column_data in self.__df['Genres'] for genre in column_data]))
+
+        # Get a list of distributors without repetition
         self.__distributors_list = list(set([element for element in self.__df['Distributor']]))
+
         self.__genres_df = self.__create_specialized_df('Genres', self.__genres_list, ['Revenue'])
         self.__dist_df = self.__create_specialized_df('Distributor', self.__distributors_list, ['Revenue'])
-        self.__preferred_genres = ['History', 'Romance', 'Action']
+        self.__preferred_genres = ['History', 'Romance', 'Action']  # Taken from persona.png
         self.__fig1, self.__fig2, self.__fig3, self.__fig4 = self.__create_graph1_figs_mean_revenue()
         self.__fig5, self.__fig6 = self.__create_graph1_figs_overall_revenue()
         self.__fig7, self.__fig8, self.__fig9 = self.__create_graph2_figs()
@@ -87,24 +104,18 @@ class ChartCreator:
         self.__fig11, self.__fig12, self.__fig13 = self.__create_graph4_figs()
 
     def __create_df(self):
-        """
-        Create a dataframe containing the information from prepared_dataset.xlsx.
-
-        Returns
-        -------
-        pandas.core.frame.DataFrame
-            The generated dataframe.
-
-        """
+        """Create a pandas dataframe containing the information from prepared_dataset.xlsx"""
         df = pd.read_excel(self.__df_file, engine='openpyxl')
         df.drop(['Unnamed: 0'], axis=1, inplace=True)  # Drop the unnamed column that is generated when reading the file
         df['Genres'] = df['Genres'].apply(eval)  # Convert the genres column to list (it is in string format initially)
+        df.drop_duplicates(subset=['Film'], inplace=True)
         return df
 
     def __create_specialized_df(self, column, column_elements, list_of_variables):
         """
-        Produce a dataframe containing information (overall, mean, standard deviation and standard error) about a
-        specific column in df (e.g., Genres, Distributors) with regards to different variables (e.g., Revenue, Rating).
+        Produce a dataframe containing information (Overall, Mean, Standard deviation and Standard error) about each
+        element in a categorical column in __df (e.g., Genres, Distributors) with regards to different numerical
+        variables (e.g., Revenue, Rating).
 
         Arguments
         ---------
@@ -123,23 +134,29 @@ class ChartCreator:
 
         """
         info = self.__extract_sms(column, column_elements, list_of_variables)
-        dataframe_columns = [column]
+        dataframe_columns = [column]  # Initialize the names of the columns that will appear on the dataframe
+
+        # Include the additional column names
         for variable in list_of_variables:
             dataframe_columns.extend([variable, f'Mean {variable}', f'SD {variable}'])
         dataframe_columns.append('Number of Movies')
-        specialized_df = pd.DataFrame(info, columns=dataframe_columns)
 
-        # Create a new column containing the Standard Error (the formula is SE = SD / sqrt(n of samples))
+        specialized_df = pd.DataFrame(info, columns=dataframe_columns)  # Create the dataframe
+
+        # Include additional columns containing the Standard Error of the variables
+        # (the formula is SE = SD / sqrt(n of samples))
         for variable in list_of_variables:
             specialized_df[f'Standard Error ({variable})'] = specialized_df.apply(
                 lambda x: round(x[f'SD {variable}'] / math.sqrt(x['Number of Movies']), 2), axis=1)
+
         return specialized_df
 
     def __extract_sms(self, column, column_elements, list_of_variables):
         """
-        Extract information (overall, mean and standard deviation) about specific column in df (e.g., Genres,
-        Distributors) with regards to different variables (e.g., Revenue, Rating). This method will be used inside
-        __create_specialized_df to extract the information that will be later introduced into a dataframe.
+        Extract information (Summation, Mean and Standard deviation) about each element in a categorical column in __df
+        (e.g., Genres, Distributors) with regards to different numerical variables (e.g., Revenue, Rating). This method
+        will be used inside __create_specialized_df to extract the information that will be later introduced into a
+        dataframe.
 
         Arguments
         ---------
@@ -158,17 +175,22 @@ class ChartCreator:
 
         """
         output_list = []
-        for element in column_elements:  # Go through the different categories
+        for element in column_elements:  # Go through each element in the column
             output_list.append([element])
             for variable in list_of_variables:
-                values = []
+                values = []  # Initialize a list containing the values of the numerical column (for each column element)
+
+                # Go through each row and append the numerical value if element appears in the row
                 for index, row in self.__df.iterrows():
                     if element in row[column]:
                         values.append(row[variable])
-                output_list[-1].append(sum(values))  # Append the Summation value
-                output_list[-1].append(sum(values) / len(values))  # Append the Mean value
-                output_list[-1].append(np.std(values))  # Append the Standard Deviation value
-            output_list[-1].append(len(values))  # Number of movies
+
+                output_list[-1].append(sum(values))  # Append the summation value
+                output_list[-1].append(sum(values) / len(values))  # Append the mean value
+                output_list[-1].append(np.std(values))  # Append the standard deviation value
+
+            output_list[-1].append(len(values))  # Append the number of movies that contained element
+
         return output_list
 
     def __produce_color_lists(self, base_color, secondary_color):
@@ -191,21 +213,24 @@ class ChartCreator:
             A list containing the secondary colors for the preferred genres and the base colors for the rest.
 
         """
-        monochromatic_list = [base_color] * len(self.__genres_df.index)
+        monochromatic_list = [base_color] * len(self.__genres_df.index)  # Base color for each genre
         pg_highlighted = copy.copy(monochromatic_list)
-        preferred_genres_pos = []
         genres_list = self.__genres_df['Genres'].tolist()
+
+        # Find the position of the bars that contain the preferred genres
+        preferred_genres_pos = []
         for i in range(len(genres_list)):
             if genres_list[i] in self.__preferred_genres:
                 preferred_genres_pos.append(i)
 
+        # Chane the color of the preferred genres bars to the secondary color
         for genre_pos, color in zip(preferred_genres_pos, pg_highlighted):
             pg_highlighted[genre_pos] = secondary_color
 
         return monochromatic_list, pg_highlighted
 
     @staticmethod
-    def __create_bar_chart(data_x, data_y, bar_colors, customdata, hovertemplate, error=None):
+    def __create_barchart(data_x, data_y, bar_colors, customdata, hovertemplate, error=None):
         """
         Produce a bar chart figure for a specific set of data.
 
@@ -236,7 +261,7 @@ class ChartCreator:
             x=data_x,
             y=data_y,
             customdata=customdata,
-            marker_color=bar_colors,  # marker color can be a single color value or an iterable
+            marker_color=bar_colors,
             hovertemplate=hovertemplate,
             error_y=dict(type='data', array=error),
             name=''
@@ -244,6 +269,60 @@ class ChartCreator:
         fig.update_layout(template='plotly_white')
 
         return fig
+
+    def __create_horizontal_barchart(self, error=None):
+        """
+        Generate a horizontal bar plot to explain the Distributor vs Mean Revenue relationship.
+
+        Arguments
+        ---------
+        error : pandas.core.series.Series
+            The dataframe column that contains the standard error information. It is none by default, which means the
+            error bars are not included.
+
+        Returns
+        -------
+        plotly.graph_objs._figure.Figure
+            The created figure.
+
+        """
+        fig = go.Figure(layout=go.Layout(bargap=0.3))
+        fig.add_trace(go.Bar(
+            y=self.__dist_df['Distributor'], x=self.__dist_df['Mean Revenue'], marker_color='lightslategray',
+            error_x=dict(type='data', array=error), orientation='h'))
+        fig.update_xaxes(type='log')
+        fig.update_yaxes(tickfont_size=9)
+        fig.update_layout(template='plotly_white')
+        return fig
+
+    @staticmethod
+    def __add_labels(figures, titles, xlabels, ylabels, additional_options=None):
+        """
+        Add the labels and any other additional options required to one or more figures.
+
+        Arguments
+        ---------
+        figures : list
+            A list containing the different figures (plotly.graph_objs._figure.Figure) to be updated.
+        titles : list
+            The titles of each of the figures.
+        xlabels : list
+            The x label of each of the figures.
+        ylabels : list
+            The y label of each of the figures.
+        additional_options : dict
+            Any other additional options required by the figures. These options must be accepted by the
+            figure.update_layout() method.
+
+        """
+        for i in range(len(figures)):  # Go through each of the figures
+            figures[i].update_layout(
+                title_text=titles[i],
+                title_x=0.5,  # Center the title
+                xaxis_title_text=xlabels[i],
+                yaxis_title_text=ylabels[i]
+            )
+            figures[i].update_layout(additional_options)
 
     def __create_graph1_figs_mean_revenue(self):
         """
@@ -269,16 +348,22 @@ class ChartCreator:
         hovertemplate = 'Mean Revenue: %{customdata[0]:.0f} (USD) <br><b>Number of Movies: %{customdata[1]:.0f}'
 
         # Create the four different figures
-        fig1 = self.__create_bar_chart(self.__genres_df['Genres'], self.__genres_df['Mean Revenue'],
-                                       monochromatic_list, custom_df, hovertemplate)
-        fig2 = self.__create_bar_chart(self.__genres_df['Genres'], self.__genres_df['Mean Revenue'],
-                                       pg_highlighted, custom_df, hovertemplate,
-                                       self.__genres_df['Standard Error (Revenue)'])
-        fig3 = self.__create_bar_chart(self.__genres_df['Genres'], self.__genres_df['Mean Revenue'],
-                                       pg_highlighted, custom_df, hovertemplate)
-        fig4 = self.__create_bar_chart(self.__genres_df['Genres'], self.__genres_df['Mean Revenue'],
-                                       monochromatic_list, custom_df, hovertemplate,
-                                       self.__genres_df['Standard Error (Revenue)'])
+        fig1 = self.__create_barchart(self.__genres_df['Genres'], self.__genres_df['Mean Revenue'],
+                                      monochromatic_list, custom_df, hovertemplate)
+        fig2 = self.__create_barchart(self.__genres_df['Genres'], self.__genres_df['Mean Revenue'],
+                                      pg_highlighted, custom_df, hovertemplate,
+                                      self.__genres_df['Standard Error (Revenue)'])
+        fig3 = self.__create_barchart(self.__genres_df['Genres'], self.__genres_df['Mean Revenue'],
+                                      pg_highlighted, custom_df, hovertemplate)
+        fig4 = self.__create_barchart(self.__genres_df['Genres'], self.__genres_df['Mean Revenue'],
+                                      monochromatic_list, custom_df, hovertemplate,
+                                      self.__genres_df['Standard Error (Revenue)'])
+
+        # Include the labels for the figures
+        titles = ['Average Revenue for Movies Containing Elements of Each Main Genre'] * 4
+        xlabels = [None] * 4
+        ylabels = ['Revenue ($)'] * 4
+        self.__add_labels([fig1, fig2, fig3, fig4], titles, xlabels, ylabels)
 
         return fig1, fig2, fig3, fig4
 
@@ -302,10 +387,16 @@ class ChartCreator:
         hovertemplate = 'Overall Revenue: %{customdata[0]:.0f} (USD) <br><b>Number of Movies: %{customdata[1]:.0f}'
 
         # Create both figures
-        fig5 = self.__create_bar_chart(self.__genres_df['Genres'], self.__genres_df['Revenue'],
-                                       monochromatic_list, custom_df, hovertemplate)
-        fig6 = self.__create_bar_chart(self.__genres_df['Genres'], self.__genres_df['Revenue'],
-                                       pg_highlighted, custom_df, hovertemplate)
+        fig5 = self.__create_barchart(self.__genres_df['Genres'], self.__genres_df['Revenue'],
+                                      monochromatic_list, custom_df, hovertemplate)
+        fig6 = self.__create_barchart(self.__genres_df['Genres'], self.__genres_df['Revenue'],
+                                      pg_highlighted, custom_df, hovertemplate)
+
+        # Include the labels for the figures
+        titles = ['Overall Revenue for Movies Containing Elements of Each Main Genre'] * 2
+        xlabels = [None] * 2
+        ylabels = ['Revenue ($)'] * 2
+        self.__add_labels([fig5, fig6], titles, xlabels, ylabels)
 
         return fig5, fig6
 
@@ -323,49 +414,54 @@ class ChartCreator:
             Count vs Runtime Histogram.
 
         """
-        fig7 = px.histogram(self.__df, x='Runtime', y='Revenue', log_y=True, nbins=10)
-        fig8 = px.histogram(self.__df, x='Runtime', y='Revenue', histfunc='avg', log_y=True, nbins=10)
-        fig9 = px.histogram(self.__df, x='Runtime', nbins=10)
+        # Create the figures
+        fig7 = px.histogram(self.__df, x='Runtime', y='Revenue', log_y=True, nbins=8,
+                            color_discrete_sequence=['lightslategray'], template='plotly_white')
+        fig8 = px.histogram(self.__df, x='Runtime', y='Revenue', histfunc='avg', log_y=True, nbins=8,
+                            color_discrete_sequence=['lightslategray'], template='plotly_white')
+        fig9 = px.histogram(self.__df, x='Runtime', nbins=8, color_discrete_sequence=['lightslategray'],
+                            template='plotly_white')
+
+        # Include the labels. Spacing between the bars has been included
+        titles = ['Overall Revenue per Runtime', 'Mean Revenue per Runtime', 'Movies per Runtime']
+        xlabels = ['Runtime (minutes)'] * 3
+        ylabels = ['Revenue ($)', 'Revenue ($)', 'Number of Movies']
+        self.__add_labels([fig7, fig8, fig9], titles, xlabels, ylabels, {'bargap': 0.02})
+
         return fig7, fig8, fig9
 
     def __create_graph3_fig(self):
-        """
-        Produce the Revenue vs Date Area plot figure.
+        """Produce the Revenue vs Date Area plot figure"""
 
-        Returns
-        -------
-        plotly.graph_objs._figure.Figure
-            The generated figure.
-
-        """
-        # Get the x data value
-        x_data = []
+        # Get each date in the in the Release Date column of self.__df
+        dates = []
         for index, row in self.__df.iterrows():
-            if row['Release Date'] not in x_data:
-                x_data.append(row['Release Date'])
+            if row['Release Date'] not in dates:  # If the date has not already been included
+                dates.append(row['Release Date'])
 
-        # Get the y data
-        y_data = []
-        for date in x_data:
-            y_data.append(sum([row['Revenue'] for index, row in self.__df.iterrows() if date == row['Release Date']]))
+        # Get the summation of revenues of movies that came out on each date in dates
+        revenue = []
+        for date in dates:
+            revenue.append(sum([row['Revenue'] for index, row in self.__df.iterrows() if date == row['Release Date']]))
 
+        # Define the figure
         layout = go.Layout(template='plotly_white')
         fig10 = go.Figure(layout=layout)
         fig10.add_trace(
-            go.Scatter(x=x_data, y=y_data, fill='tonexty'))  # Add the movie data
+            go.Scatter(x=dates, y=revenue, fill='tonexty'))
 
-        # Add a green region (pre-covid area)
+        # Add a green region (pre-lockdown)
         fig10.add_vrect(
             x0="2018-01-01", x1="2020-03-15",
-            fillcolor="rgb(0,255,0)", opacity=0.3,
+            fillcolor="rgb(0,255,0)", opacity=0.2,
             layer="below", line_width=0,
             annotation_text='Pre-Lockdown', annotation_position='top left', annotation_font_color='grey'
         )
 
-        # Add a red region (1st Lockdown area)
+        # Add a red region (lockdown)
         fig10.add_vrect(
             x0="2020-03-15", x1="2020-07-15",
-            fillcolor="rgb(255,0,0)", opacity=0.3,
+            fillcolor="rgb(255,0,0)", opacity=0.2,
             layer="below", line_width=0,
             annotation_text='Lockdown', annotation_position='top left', annotation_font_color='grey'
         ),
@@ -373,39 +469,18 @@ class ChartCreator:
         # Add a yellow region (post-lockdown)
         fig10.add_vrect(
             x0="2020-07-15", x1="2021-10-21",
-            fillcolor="rgb(255,153,0)", opacity=0.3,
+            fillcolor="rgb(255,153,0)", opacity=0.2,
             layer="below", line_width=0,
             annotation_text='Post-Lockdown', annotation_position='top right', annotation_font_color='grey'
         )
 
-        fig10.update_yaxes(range=[0, 2.9 * math.pow(10, 9)])
-        fig10.update_layout(hovermode='x unified')
+        fig10.update_yaxes(range=[0, 2.9 * math.pow(10, 9)])  # Select the y range
+
+        # Include the labels. The x unified hovermode means a vertical line will be used to hover over the chart
+        self.__add_labels([fig10], ['Revenue of Top Movies per Release Date'], [None],
+                                   ['Revenue ($)'], {'hovermode': 'x unified'})
+
         return fig10
-
-    def __create_horizontal_barchart(self, error=None):
-        """
-        Generate a horizontal bar plot to explain the Distributor vs Mean Revenue relationship.
-
-        Arguments
-        ---------
-        error : pandas.core.series.Series
-            The dataframe column that contains the standard error information. It is none by default, which means the
-            error bars are not included.
-
-        Returns
-        -------
-        plotly.graph_objs._figure.Figure
-            The created figure.
-
-        """
-        fig = go.Figure(layout=go.Layout(bargap=0.3))
-        fig.add_trace(go.Bar(
-            y=self.__dist_df['Distributor'], x=self.__dist_df['Mean Revenue'],
-            error_x=dict(type='data', array=error),
-            orientation='h'))
-        fig.update_xaxes(type='log')
-        fig.update_yaxes(tickfont_size=9)  # Any size above this one does not allow the labels to be seen
-        return fig
 
     def __create_graph4_figs(self):
         """
@@ -421,76 +496,83 @@ class ChartCreator:
             A horizontal bar chart that showcases Distributor vs Mean Revenue (no error bars).
 
         """
+        # Define the figures
         fig11 = px.treemap(self.__dist_df, path=[px.Constant("Distribution Companies"), 'Distributor'],
                            values='Revenue',
-                           color='Number of Movies',
+                           color='Number of Movies',  # Add a color scale for the number of movies
                            color_continuous_scale='RdBu',
                            color_continuous_midpoint=np.average(self.__dist_df['Number of Movies'],
                                                                 weights=self.__dist_df['Revenue']))
-
-        self.__dist_df.sort_values(by=['Mean Revenue'], inplace=True)
+        self.__dist_df.sort_values(by=['Mean Revenue'], inplace=True)  # Sort by ascending Mean Revenue
         fig12 = self.__create_horizontal_barchart(self.__dist_df['Standard Error (Revenue)'])
         fig13 = self.__create_horizontal_barchart()
+
+        # Include the labels
+        titles = ['Distributor Revenue', 'Mean Distributor Revenue', 'Mean Distributor Revenue']
+        xlabels = [None, 'Revenue ($)', 'Revenue ($)']
+        ylabels = [None] * 3
+        self.__add_labels([fig11, fig12, fig13], titles, xlabels, ylabels)
+
         return fig11, fig12, fig13
 
     @property
     def fig1(self):
-        """Getter method to obtain fig1"""
+        """Getter method to obtain __fig1"""
         return self.__fig1
 
     @property
     def fig2(self):
-        """Getter method to obtain fig2"""
+        """Getter method to obtain __fig2"""
         return self.__fig2
 
     @property
     def fig3(self):
-        """Getter method to obtain fig3"""
+        """Getter method to obtain __fig3"""
         return self.__fig3
 
     @property
     def fig4(self):
-        """Getter method to obtain fig4"""
+        """Getter method to obtain __fig4"""
         return self.__fig4
 
     @property
     def fig5(self):
-        """Getter method to obtain fig5"""
+        """Getter method to obtain __fig5"""
         return self.__fig5
 
     @property
     def fig6(self):
-        """Getter method to obtain fig6"""
+        """Getter method to obtain __fig6"""
         return self.__fig6
 
     @property
     def fig7(self):
-        """Getter method to obtain fig7"""
+        """Getter method to obtain __fig7"""
         return self.__fig7
 
     @property
     def fig8(self):
-        """Getter method to obtain fig8"""
+        """Getter method to obtain __fig8"""
         return self.__fig8
 
     @property
     def fig9(self):
-        """Getter method to obtain fig9"""
+        """Getter method to obtain __fig9"""
         return self.__fig9
 
     @property
     def fig10(self):
-        """Getter method to obtain fig10"""
+        """Getter method to obtain __fig10"""
         return self.__fig10
 
     @property
     def fig11(self):
-        """Getter method to obtain fig11"""
+        """Getter method to obtain __fig11"""
         return self.__fig11
 
     @property
     def fig12(self):
-        """Getter method to obtain fig12"""
+        """Getter method to obtain __fig12"""
         return self.__fig12
 
     @property
