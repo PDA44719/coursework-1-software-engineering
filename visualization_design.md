@@ -219,35 +219,37 @@ they may not be able to *see all the labels*. Therefore, a way to solve this wou
 users to *select* the distribution companies they want on their chart (this is *not efficient* with the way I created my
 ChartCreator class, because it would require to generate each chart individually).
 
+### References
 
 [1] Enago Academy. (2018, May 21). Chartjunk: How to Avoid Confusing Elements in Your Figures. Enago Academy. Retrieved
 February 16, 2022, from https://www.enago.com/academy/chartjunk-how-to-avoid-confusing-elements-in-your-figures/ 
 
 [2] Metwalli, S. A. (2020, September 8). Data Visualization 101: How to Choose a Chart Type. Towards Data Science.
-Retrieved February 2, 2022, from https://towardsdatascience.com/data-visualization-101-how-to-choose-a-chart-type-9b8830e558d6 
+Retrieved February 2, 2022, from
+https://towardsdatascience.com/data-visualization-101-how-to-choose-a-chart-type-9b8830e558d6 
 
-[3] Bradburn, S. (n.d.). How to Use The Standard Error Formula. Top Tip Bio. Retrieved February 16, 2022, from 
+[3] Bradburn, S. (n.d.). How to Use The Standard Error Formula. Top Tip Bio. Retrieved February 5, 2022, from 
 https://toptipbio.com/standard-error-formula/ 
 
-[4] Figueroa, A. (2019, July 9). Data Visualization and The Truthful Art. Rootstrap. Retrieved February 5, 2022, from
+[4] Figueroa, A. (2019, July 9). Data Visualization and The Truthful Art. Rootstrap. Retrieved February 6, 2022, from
 https://www.rootstrap.com/blog/data-visualization-and-truthful-art/
 
-[5] Cherdarchuk, J. (2013, August 20). Data Looks Better Naked. Darkhorse Analytics. Retrieved February 16, 2022, from
+[5] Cherdarchuk, J. (2013, August 20). Data Looks Better Naked. Darkhorse Analytics. Retrieved February 6, 2022, from
 https://www.darkhorseanalytics.com/blog/data-looks-better-naked 
 
-[6] Plotly. (n.d.). Histograms in Python. Plotly | Graphing Libraries. Retrieved February 16, 2022, from
+[6] Plotly. (n.d.). Histograms in Python. Plotly | Graphing Libraries. Retrieved February 10, 2022, from
 https://plotly.com/python/histograms/ 
 
-[7] The Data Visualisation Catalogue. (n.d.). Retrieved February 2, 2022, from https://datavizcatalogue.com/ 
+[7] The Data Visualisation Catalogue. (n.d.). Retrieved February 8, 2022, from https://datavizcatalogue.com/ 
 
 [8] Starr, B. (2015, January 13). Data Visualization 101: Area charts. How to Design Area Charts. Retrieved February 8,
 2022, from https://visage.co/data-visualization-101-area-charts/
 
-[9] Plotly. (n.d.). dcc.RangeSlider. Plotly | Graphing Libraries. Retrieved February 16, 2022, from
+[9] Plotly. (n.d.). dcc.RangeSlider. Plotly | Graphing Libraries. Retrieved February 12, 2022, from
 https://dash.plotly.com/dash-core-components/rangeslider 
 
-[10] Weitz, D. (2020, October 5). Treemaps, Why and How. Towards Data Science. Retrieved February 16, 2022, from
+[10] Weitz, D. (2020, October 5). Treemaps, Why and How. Towards Data Science. Retrieved February 13, 2022, from
 https://towardsdatascience.com/treemaps-why-and-how-cfb1e1c863e8 
 
-[11] Plotly. (n.d.). Treemap Charts in Python. Plotly | Graphing Libraries. Retrieved February 16, 2022, from
+[11] Plotly. (n.d.). Treemap Charts in Python. Plotly | Graphing Libraries. Retrieved February 14, 2022, from
 https://plotly.com/python/treemaps/ 
