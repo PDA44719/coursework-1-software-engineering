@@ -4,3 +4,6 @@ pandas
 dash
 pytest
 dash-bootstrap-components
+plotly
+numpy
+openpyxl
