@@ -2,6 +2,8 @@
 ## GitHub Repository URL
 Here is the [link to my repository](https://github.com/ucl-comp0035/comp0034-cw1-i-PDA44719.git).
 
+I have also included a link to the [YouTube video showing the app](https://youtu.be/BPoj58kKABs).
+
 ## Visualization Design
 For the visualization design, the [prepared dataset](prepared_dataset.xlsx) and [persona](persona.png) from COMP0035
 have been taken into account. Please refer to the [markdown document](visualization_design.md) used to explain the
